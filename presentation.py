@@ -3,6 +3,12 @@ import sys
 from internal_logics import *
 
 
+def print_text_on_rect(screen, text, rect, font, color, rect_color):
+    pygame.draw.rect(screen, rect_color, rect)
+    text_surface = font.render(text, True, color)
+    screen.blit(text_surface, (rect.x + 5, rect.y + 5))
+
+
 class Representor:
     bottle_list = []
     num_of_bottles = 0
@@ -39,17 +45,17 @@ class Representor:
         first_portion = self.width // (2 * self.bottle_width)
         left = self.bottle_width
         top = 2 * self.bottle_width
-    '''
+
         for cnt in range(first_portion):
-            self.rects_to_bottles[pygame.Rect(left + 2 * self.bottle_width * cnt, top,
-                                              self.bottle_width, self.bottle_height)] = cnt
+            self.rects_to_bottles[cnt] = pygame.Rect(left + 2 * self.bottle_width * cnt, top,
+                                                     self.bottle_width, self.bottle_height)
 
         top += self.bottle_height + self.bottle_width
 
         for cnt in range(first_portion, self.num_of_bottles):
-            self.rects_to_bottles[pygame.Rect(left + 2 * self.bottle_width * (cnt - first_portion), top,
-                                              self.bottle_width, self.bottle_height)] = cnt
-    '''
+            self.rects_to_bottles[cnt] = pygame.Rect(left + 2 * self.bottle_width * (cnt - first_portion), top,
+                                                     self.bottle_width, self.bottle_height)
+
     def __init__(self, _width, _height, bottle_set=BottleSet()):
         self.reset(_width, _height, bottle_set)
 
@@ -114,39 +120,28 @@ class Representor:
                              color_spectrum, background_color, border_color, border_width)
 
     def start_screen(self, screen):
+        clock = pygame.time.Clock()
         # asks to enter your name and returns it
         background_color = (204, 204, 255)
         screen.fill(background_color)
         base_font = pygame.font.Font(None, 32)
         comment_font = pygame.font.Font(None, 16)
-        user_name = ''
-
-        hello_string = 'Hello!'
-        information_string = 'Enter your name:'
-        comment_string = 'It is needed for saving your progress. Name should be up to 8 characters'
-
-        hello_surface = base_font.render(hello_string, True, (255, 255, 255))
-        information_surface = base_font.render(information_string, True, (255, 255, 255))
-        comments_surface = comment_font.render(comment_string, True, (255, 255, 255))
 
         hello_rect = pygame.Rect(10, 10, 100, 32)
         information_rect = pygame.Rect(10, 42, 200, 32)
         comments_rect = pygame.Rect(10, 74, 400, 16)
 
+        text_color = (255, 255, 255)
         color = (135, 206, 250)
-
-        pygame.draw.rect(screen, color, hello_rect)
-        pygame.draw.rect(screen, color, information_rect)
-        pygame.draw.rect(screen, color, comments_rect)
-
-        screen.blit(hello_surface, (hello_rect.x + 5, hello_rect.y + 5))
-        screen.blit(information_surface, (information_rect.x + 5, information_rect.y + 5))
-        screen.blit(comments_surface, (comments_rect.x + 2, comments_rect.y + 2))
+        print_text_on_rect(screen, 'Hello!', hello_rect, base_font, text_color, color)
+        print_text_on_rect(screen, 'Enter your name:', information_rect, base_font, text_color, color)
+        print_text_on_rect(screen, 'It is needed for saving your progress. Name should be up to 8 characters',
+                           comments_rect, comment_font, text_color, color)
 
         pygame.display.flip()
 
         # input text box
-        input_rect = pygame.Rect(10, 80, 300, 32)
+        input_rect = pygame.Rect(10, 90, 300, 32)
         input_color = (255, 255, 102)
         input_text = ''
 
@@ -154,29 +149,38 @@ class Representor:
 
         active = False
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+        confirm_rect = pygame.Rect(10, 140, 200, 32)
+        print_text_on_rect(screen, 'Confirm', confirm_rect, base_font, text_color, color)
+        print_text_on_rect(screen, input_text, input_rect, base_font, text_color, (153, 51, 255))
+        pygame.display.flip()
+        confirmed = False
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if input_rect.collidepoint(pygame.mouse.get_pos()):
-                    active = True
-                else:
-                    active = False
+        while True:
+            for event in pygame.event.get():
+                print("here")
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-            if not active:
-                continue
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if input_rect.collidepoint(pygame.mouse.get_pos()):
+                        active = True
+                    else:
+                        active = False
+                    if confirm_rect.collidepoint(pygame.mouse.get_pos()):
+                        pygame.quit()
+                        sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    input_text = input_text[:-1]
-                else:
-                    input_text += event.unicode
+                if not active:
+                    continue
 
-            input_surface = base_font.render(input_text, True, (255, 255, 255))
-            screen.blit(input_surface, (input_rect.x + 5, input_rect.y + 5))
-            pygame.display.flip()
-            clock = pygame.time.Clock()
-            clock.tick(60)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    else:
+                        input_text += event.unicode
 
+                print_text_on_rect(screen, input_text, input_rect, base_font, text_color, (153, 51, 255))
+                pygame.display.flip()
+
+                clock.tick(60)

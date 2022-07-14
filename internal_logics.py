@@ -1,6 +1,4 @@
 import random
-import drawing
-import arcade
 import pygame
 import time
 
@@ -89,76 +87,4 @@ class BottleSet:
         _bottle_list = [Bottle(self.num_of_layers, color_list) for color_list in color_lists] + \
                        [Bottle(self.num_of_layers)] * num_empty
         self.bottle_list = _bottle_list
-
-
-class State:
-    # keeps information during the game
-    initial_state = BottleSet()
-    current_set = BottleSet()
-
-def draw_bottle(surf, bottle, left, top, bottle_width, bottle_height, color_spectrum, background_color,
-                border_color, border_width):
-    colors = bottle.colors
-    num_of_layers = bottle.num_of_layers
-    layer_height = (bottle_height // (4 * num_of_layers)) * 4
-    for layer in range(num_of_layers - 1):
-        curr_color = background_color
-        if colors[layer] is not None:
-            curr_color = color_spectrum[colors[layer]]
-        pygame.draw.rect(surf, curr_color, pygame.Rect(left, top + layer * layer_height, bottle_width, layer_height))
-
-    curr_color = background_color
-    if colors[num_of_layers - 1] is not None:
-        curr_color = color_spectrum[colors[num_of_layers - 1]]
-
-    pygame.draw.rect(surf, curr_color, pygame.Rect(left, top + (num_of_layers - 1) * layer_height,
-                                                   bottle_width, layer_height // 4))
-    pygame.draw.rect(surf, curr_color, pygame.Rect(left, top + (num_of_layers - 1) * layer_height + layer_height // 4,
-                     bottle_width, 3 * (layer_height // 4)),
-                     width=0, border_radius=0, border_top_left_radius=-1,
-                     border_top_right_radius=-1, border_bottom_left_radius=bottle_width // 2,
-                     border_bottom_right_radius=bottle_width // 2)
-
-    pygame.draw.rect(surf, border_color, pygame.Rect(left - border_width, top - 2 * border_width,
-                                                     border_width,
-                                                     int(layer_height * (num_of_layers - (3/4))) + 2 * border_width))
-    pygame.draw.rect(surf, border_color, pygame.Rect(left + bottle_width, top - 2 * border_width,
-                                                     border_width,
-                                                     int(layer_height * (num_of_layers - (3/4))) + 2 * border_width))
-
-    pygame.draw.rect(surf, border_color, pygame.Rect(left - border_width, top + int(layer_height * (num_of_layers - (3/4))),
-                     bottle_width + 2 * border_width, 3 * (layer_height // 4)),
-                     width=border_width, border_radius=0, border_top_left_radius=-1,
-                     border_top_right_radius=-1, border_bottom_left_radius=bottle_width // 2,
-                     border_bottom_right_radius=bottle_width // 2)
-    pygame.draw.rect(surf, curr_color, pygame.Rect(left, top + int(layer_height * (num_of_layers - (3/4))),
-                                                   bottle_width, border_width))
-
-
-def draw_bottle_set(surf, color_spectrum, bottle_set=BottleSet(),
-                    width=600, height=600, border_width=2, border_color=(96, 96, 96), background_color=(204, 204, 255)):
-    bottle_list = bottle_set.get_list()
-    num_of_bottles = bottle_set.get_num_of_bottles()
-    columns = num_of_bottles + 2
-
-    bottle_width = (width // (4 * columns)) * 4
-    bottle_height = ((height - 4 * bottle_width) // 8) * 4
-
-    left = bottle_width
-    top = 2 * bottle_width
-
-    first_portion = width // (2 * bottle_width)
-
-    for cnt in range(first_portion):
-        draw_bottle(surf, bottle_list[cnt], left + 2 * bottle_width * cnt, top, bottle_width, bottle_height,
-                    color_spectrum, background_color, border_color, border_width)
-
-    top += bottle_height + bottle_width
-
-    for cnt in range(first_portion, num_of_bottles):
-        draw_bottle(surf, bottle_list[cnt], left + 2 * bottle_width * (cnt - first_portion) , top, bottle_width, bottle_height,
-                    color_spectrum, background_color, border_color, border_width)
-
-
-
 

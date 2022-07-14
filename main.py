@@ -1,11 +1,10 @@
-from internal_logics import *
-from drawing import *
-import arcade
-import pygame
-import time
+from presentation import *
 
-X_WIDTH = 600
-Y_WIDTH = 600
+X_WIDTH = 400
+Y_WIDTH = 400
+
+pygame.init()
+
 screen = pygame.display.set_mode((X_WIDTH, Y_WIDTH))
 screen.fill((204, 204, 255))
 
@@ -19,10 +18,15 @@ background_color = (204, 204, 255)
 border_color = (96, 96, 96)
 border_width = 2
 
-draw_bottle_set(screen, color_list, bottle_set)
+representor = Representor(X_WIDTH, Y_WIDTH, bottle_set)
+
+# representor.draw_bottle_set(screen, color_list, bottle_set)
+representor.start_screen(screen)
 
 screen.blit(screen, (0, 0))
 
 
 pygame.display.flip()
 time.sleep(60)
+
+pygame.quit()

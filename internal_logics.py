@@ -39,13 +39,18 @@ class Bottle:
         able_to_add = min(size, self.get_size_of_empty_space())
         for i in range(able_to_add):
             self.colors[self.first_not_empty_layer - i - 1] = self.get_top_color()
-        return size - able_to_add
+        return able_to_add
 
     def erase_from_the_top(self, size=1):
         able_to_erase = min(size, self.get_top_size())
         for i in range(able_to_erase):
             self.colors[self.first_not_empty_layer] = None
             self.first_not_empty_layer += 1
+
+
+def are_compatible(first_bottle, second_bottle):
+    return (first_bottle.get_top_color == second_bottle.get_top_color) and \
+           second_bottle.get_size_of_empty_space >=1
 
 
 class BottleSet:
@@ -88,3 +93,7 @@ class BottleSet:
                        [Bottle(self.num_of_layers)] * num_empty
         self.bottle_list = _bottle_list
 
+    def are_compatible(self, first, second):
+        if first >= len(self.bottle_list) or second >= len(self.bottle_list) or first == second:
+            return False
+        return are_compatible(self.bottle_list[first], self.bottle_list[second])

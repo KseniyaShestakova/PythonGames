@@ -33,12 +33,13 @@ class Bottle:
         start = self.first_not_empty_layer
         while start < self.num_of_layers and self.colors[start] == self.get_top_color():
             start += 1
-        return self.first_not_empty_layer - start
+        return start - self.first_not_empty_layer
 
-    def add_to_the_top(self, size=1):
+    def add_to_the_top(self, size, color):
         able_to_add = min(size, self.get_size_of_empty_space())
         for i in range(able_to_add):
-            self.colors[self.first_not_empty_layer - i - 1] = self.get_top_color()
+            self.colors[self.first_not_empty_layer - i - 1] = color
+        self.first_not_empty_layer -= able_to_add
         return able_to_add
 
     def erase_from_the_top(self, size=1):
@@ -46,11 +47,19 @@ class Bottle:
         for i in range(able_to_erase):
             self.colors[self.first_not_empty_layer] = None
             self.first_not_empty_layer += 1
+            self.first_not_empty_layer = min(self.first_not_empty_layer, self.num_of_layers)
+
+    def is_filled(self):
+        return self.get_top_size() == self.num_of_layers
 
 
 def are_compatible(first_bottle, second_bottle):
-    return (first_bottle.get_top_color == second_bottle.get_top_color) and \
-           second_bottle.get_size_of_empty_space >=1
+    print(first_bottle.get_top_color())
+    print(second_bottle.get_top_color())
+    print(second_bottle.get_size_of_empty_space())
+    return ((first_bottle.get_top_color() == second_bottle.get_top_color()) and
+            second_bottle.get_size_of_empty_space() >= 1) or \
+           (second_bottle.get_size_of_empty_space() == second_bottle.num_of_layers)
 
 
 class BottleSet:
@@ -89,11 +98,20 @@ class BottleSet:
                 rand_color = random.randint(0, len(color_spectrum) - 1)
                 color_lists[curr].append(color_spectrum[rand_color])
                 color_spectrum.pop(rand_color)
-        _bottle_list = [Bottle(self.num_of_layers, color_list) for color_list in color_lists] + \
-                       [Bottle(self.num_of_layers)] * num_empty
+        _bottle_list = [Bottle(self.num_of_layers, color_list) for color_list in color_lists]
+        for i in range(num_empty):
+            _bottle_list.append(Bottle(self.num_of_layers))
         self.bottle_list = _bottle_list
 
     def are_compatible(self, first, second):
         if first >= len(self.bottle_list) or second >= len(self.bottle_list) or first == second:
             return False
         return are_compatible(self.bottle_list[first], self.bottle_list[second])
+
+    def count_filled(self):
+        ret = 0
+        for bottle in self.bottle_list:
+            if bottle.get_top_size() == bottle.num_of_layers:
+                ret += 1
+
+        return ret

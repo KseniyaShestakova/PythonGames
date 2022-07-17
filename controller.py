@@ -1,5 +1,20 @@
 from presentation import *
 
+FUCHSIA = (204, 0, 102)
+LILAC = (139, 0, 139)
+LIGHTSKYBLUE = (135, 206, 250)
+CORNFLOWERBLUE = (0, 0, 205)  # MEDIUMBLUE
+DARKBLUE = (0, 0, 139)
+LIGHTCYAN = (40, 255, 255)
+GOLDENROD = (255, 255, 51)
+LIGHTSALMON = (178, 34, 34)
+SPRINGGREEN = (0, 255, 127)
+ORANGE = (210, 105, 30)
+ORCHID = (218, 112, 214)
+SANDYBROWN = (244, 164, 96)
+ROSYBROWN = (188, 143, 143)
+GREEN = (0, 128, 0)
+
 
 class Controller:
     name = ''
@@ -16,9 +31,9 @@ class Controller:
     representor = None
 
     def __init__(self, _bottle_set=BottleSet(), _width=600, _height=600,
-                 _color_spectrum=((0, 0, 205), (255, 140, 0), (135, 206, 235),
-                                  (0, 255, 255), (250, 128, 114),
-                                  (154, 205, 50), (139, 0, 139), (255, 215, 0)),
+                 _color_spectrum=( FUCHSIA, LILAC, LIGHTSKYBLUE, CORNFLOWERBLUE, DARKBLUE, LIGHTCYAN,
+                                GOLDENROD, LIGHTSALMON, SPRINGGREEN, ORANGE, ORCHID, SANDYBROWN,
+                                ROSYBROWN, GREEN),
                  _border_color=(96, 96, 96), _border_width=2,
                  _background_color=(204, 204, 255)):
         pygame.init()
@@ -91,9 +106,13 @@ class Controller:
                             able_to_erase = self.add_to(compared, self.get_bottle(up).get_top_size(),
                                                         self.get_bottle(up).get_top_color())
                             self.erase_from(up, able_to_erase)
+                            print('filled ' + str(self.num_of_filled))
                             if self.get_bottle(compared).is_filled():
+                                # trouble is here
                                 self.num_of_filled += 1
                                 if self.num_of_filled == self.need_to_be_filled:
+                                    print('here')
+                                    print(self.num_of_filled)
                                     self.end_round()
                                     self.coins += self.plus
                                     return
@@ -116,5 +135,4 @@ class Controller:
         self.reset_representor()
         self.show_curr()
         self.play(clock)
-
 

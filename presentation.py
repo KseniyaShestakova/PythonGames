@@ -6,9 +6,22 @@ from internal_logics import *
 
 
 def print_text_on_rect(screen, text, rect, font, color, rect_color):
-    pygame.draw.rect(screen, rect_color, rect)
+    pygame.draw.rect(screen, rect_color, rect, width=0, border_radius=0, border_top_left_radius=(rect.y // 2),
+                     border_top_right_radius=(rect.y // 2), border_bottom_left_radius=(rect.y // 2),
+                     border_bottom_right_radius=(rect.y // 2))
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (rect.x + 5, rect.y + 5))
+    pygame.display.flip()
+
+
+def print_text(screen, text, font, color, rect_color, height):
+    sz = font.size(text)  # (width, height)
+    width = sz[0]
+    screen_width = screen.get_size()[0]
+    rect_height = sz[1]
+
+    rect = pygame.Rect(int((screen_width - width) // 2), int(height), int(width) + 5, int(rect_height) + 5)
+    print_text_on_rect(screen, text, rect, font, color, rect_color)
 
 
 class Representor:
@@ -54,8 +67,8 @@ class Representor:
         self.top = 2 * self.bottle_width
 
     def __init__(self, _screen, _width=600, _height=600, _color_spectrum=((0, 0, 205), (255, 140, 0), (135, 206, 235),
-                                                                  (0, 255, 255), (250, 128, 114),
-                                                                  (154, 205, 50), (139, 0, 139), (255, 215, 0)),
+                                                                          (0, 255, 255), (250, 128, 114),
+                                                                          (154, 205, 50), (139, 0, 139), (255, 215, 0)),
                  _border_color=(96, 96, 96), _border_width=2,
                  _background_color=(204, 204, 255), bottle_set=BottleSet()):
         self.screen = _screen
@@ -92,15 +105,16 @@ class Representor:
                                                               self.border_width,
                                                               int(self.layer_height * (
                                                                       self.num_of_layers - (
-                                                                          3 / 4))) + 2 * self.border_width))
+                                                                      3 / 4))) + 2 * self.border_width))
         pygame.draw.rect(surf, self.border_color, pygame.Rect(left + self.bottle_width, top - 2 * self.border_width,
                                                               self.border_width,
                                                               int(self.layer_height * (
                                                                       self.num_of_layers - (
-                                                                          3 / 4))) + 2 * self.border_width))
+                                                                      3 / 4))) + 2 * self.border_width))
 
         pygame.draw.rect(surf, self.border_color,
-                         pygame.Rect(left - self.border_width, top + int(self.layer_height * (self.num_of_layers - (3 / 4))),
+                         pygame.Rect(left - self.border_width,
+                                     top + int(self.layer_height * (self.num_of_layers - (3 / 4))),
                                      self.bottle_width + 2 * self.border_width, 3 * (self.layer_height // 4)),
                          width=self.border_width, border_radius=0, border_top_left_radius=-1,
                          border_top_right_radius=-1, border_bottom_left_radius=self.bottle_width // 2,
@@ -123,56 +137,133 @@ class Representor:
 
         self.top -= self.bottle_height + self.bottle_width
 
+    def print_start_screen(self, base_font, comment_font, text_color, color, offset, base_step, comment_step):
+        print_text(self.screen, 'Hello! ', base_font, text_color, color, offset)
+        offset += base_step
+        print_text(self.screen, 'Enter your name: ', base_font, text_color, color, offset)
+        offset += base_step
+        print_text(self.screen, 'It is needed for saving your progress. Name should be up to 8 characters ',
+                   comment_font, text_color, color, offset)
+        offset += comment_step
+        return offset
+
+
+    def show_size_options(self, base_font, base_step, offset, text_color, color, input_color):
+        print_text(self.screen, 'Choose number of bottles: ', base_font, text_color, color, offset)
+        offset += base_step
+
+        size_options = 10
+        start = 5
+        rects_for_size = []
+        width, height = base_font.size('10  ')
+        height += 5
+        step = width + 15
+        left = (self.screen.get_size()[1] - (size_options // 2) * step) // 2
+
+        for i in range(size_options // 2):
+            rects_for_size.append(pygame.Rect(int(left + step * i), offset, width, height))
+
+        offset += base_step
+        for i in range(size_options // 2):
+            rects_for_size.append(pygame.Rect(int(left + step * i), offset, width, height))
+
+        for i in range(size_options):
+            print_text_on_rect(self.screen, str(start + i), rects_for_size[i], base_font, text_color, input_color)
+
+        return offset
+
+    def check_size(self, event, base_font, base_step, offset, text_color, color, input_color, num_of_bottles):
+        active_color = (218, 165, 32)
+        if event.type != pygame.MOUSEBUTTONDOWN:
+            return num_of_bottles
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            print(str(x) + ' ' + str(y))
+            size_options, start = 10, 5
+            width, height = base_font.size('10  ')
+            step = width + 15
+            height += 5
+            left = (self.screen.get_size()[1] - (size_options // 2) * step) // 2
+            if x < left or x > left + step * (size_options // 2):
+                return num_of_bottles
+            if y < offset + base_step or y > offset + 2 * base_step + height:
+                return num_of_bottles
+
+            left_offset = (x - left) // step
+
+            if y > offset + height + base_step:
+                ret = left_offset + size_options // 2
+                self.show_size_options(base_font, base_step, offset, text_color, color, input_color)
+                print_text_on_rect(self.screen, str(start + ret), pygame.Rect(int(left + step * left_offset),
+                                                                              offset + 2 * base_step,
+                                                                              width, height), base_font, text_color,
+                                   active_color)
+                return ret + start
+            else:
+                ret = left_offset
+                self.show_size_options(base_font, base_step, offset, text_color, color, input_color)
+                print_text_on_rect(self.screen, str(start + ret), pygame.Rect(int(left + step * left_offset),
+                                                                              offset + base_step,
+                                                                              width, height), base_font, text_color,
+                                   active_color)
+                return ret + start
+
     def start_screen(self):
         clock = pygame.time.Clock()
         # asks to enter your name and returns it
         background_color = (204, 204, 255)
         self.screen.fill(background_color)
-        base_font = pygame.font.Font(None, 32)
-        comment_font = pygame.font.Font(None, 16)
-
-        hello_rect = pygame.Rect(10, 10, 100, 32)
-        information_rect = pygame.Rect(10, 42, 200, 32)
-        comments_rect = pygame.Rect(10, 74, 400, 16)
+        base_font = pygame.font.Font(None, 40)
+        comment_font = pygame.font.Font(None, 20)
 
         text_color = (255, 255, 255)
         color = (135, 206, 250)
-        print_text_on_rect(self.screen, 'Hello!', hello_rect, base_font, text_color, color)
-        print_text_on_rect(self.screen, 'Enter your name:', information_rect, base_font, text_color, color)
-        print_text_on_rect(self.screen, 'It is needed for saving your progress. Name should be up to 8 characters',
-                           comments_rect, comment_font, text_color, color)
 
-        pygame.display.flip()
+        offset = 10
+        base_step = base_font.size('A')[1] + 10
+        comment_step = comment_font.size('A')[1] + 10
+        offset = self.print_start_screen(base_font, comment_font, text_color, color, offset, base_step, comment_step)
 
         # input text box
-        input_rect = pygame.Rect(10, 90, 300, 32)
+        input_rect = pygame.Rect(150, offset, 300, 37)
         input_color = (255, 255, 102)
         input_text = ''
+        offset += base_step
 
-        pygame.draw.rect(self.screen, input_color, input_rect)
+        print_text_on_rect(self.screen, input_text, input_rect, base_font, text_color, input_color)
 
         active = False
-
-        confirm_rect = pygame.Rect(10, 140, 200, 32)
-        print_text_on_rect(self.screen, 'Confirm', confirm_rect, base_font, text_color, color)
         print_text_on_rect(self.screen, input_text, input_rect, base_font, text_color, (153, 51, 255))
+
+        self.show_size_options(base_font, base_step, offset, text_color, color, input_color)
+
+        confirm_rect = pygame.Rect(200, 400, 200, 35)
+        print_text_on_rect(self.screen, 'Go on!', confirm_rect, base_font, text_color, input_color)
+
         pygame.display.flip()
+        num_of_bottles = 8
+        print(num_of_bottles)
 
         while True:
             for event in pygame.event.get():
-                print("here")
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
+                num_of_bottles = self.check_size(event, base_font, base_step, offset, text_color, color,
+                                                 input_color, num_of_bottles)
+                print(num_of_bottles)
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    if confirm_rect.collidepoint(pygame.mouse.get_pos()):
+                        print(num_of_bottles)
+                        return input_text, num_of_bottles
+
                     if input_rect.collidepoint(pygame.mouse.get_pos()):
                         active = True
                     else:
                         active = False
-                    if confirm_rect.collidepoint(pygame.mouse.get_pos()):
-                        print("confirmed")
-                        return input_text
 
                 if not active:
                     continue
@@ -184,6 +275,7 @@ class Representor:
                         input_text += event.unicode
 
                 print_text_on_rect(self.screen, input_text, input_rect, base_font, text_color, (153, 51, 255))
+
                 pygame.display.flip()
 
                 clock.tick(60)
@@ -191,11 +283,12 @@ class Representor:
     def collide_with(self, pos):
         x = pos[0]
         y = pos[1]
+
         # return the number of bottle to which this point belongs
         if x < self.left or y < self.top:
             return None
 
-        left_offset = (x - self.left) // self.width
+        left_offset = (x - self.left) // self.bottle_width
         if left_offset % 2 == 1:
             return None
 
@@ -214,16 +307,19 @@ class Representor:
     def lift(self, num):
         # lifts the bottle with number num
         if num < self.width // (2 * self.bottle_width):
-            x = self.top + self.bottle_width * 2 * num - self.border_width
-            y = self.left - 2 * self.border_width
+            x = self.left + self.bottle_width * (2 * num) - self.border_width
+            y = self.top - 2 * self.border_width
         else:
-            x = self.top + self.bottle_width * 2 * (num - self.width // (2 * self.bottle_width)) - self.border_width
-            y = self.top + self.bottle_width + self.bottle_height - 2 * self.border_width
+            x = self.left + self.bottle_width * 2 * (num - self.width // (2 * self.bottle_width)) - self.border_width
+            y = self.top + self.bottle_width + self.bottle_height - (2 * self.border_width)
+
+        print(str(x) + ' ' + str(y))
 
         pygame.draw.rect(self.screen, self.background_color, pygame.Rect(x, y,
                                                                          self.bottle_width + 2 * self.border_width,
                                                                          self.bottle_height + 3 * self.border_width))
         self.draw_bottle(self.screen, self.bottle_list[num], x, y - self.bottle_width // 2)
+        pygame.display.flip()
 
     def show_curr(self):
         self.screen.fill(self.background_color)

@@ -4,6 +4,10 @@ from presentation import *
 class Controller:
     name = ''
     coins = 0
+    num_of_filled = 0
+    need_to_be_filled = 0
+    plus = 0
+
     initial = BottleSet()
     current = BottleSet()
     previous = BottleSet()
@@ -31,6 +35,8 @@ class Controller:
         self.initial.random_filling(num_empty)
         self.current = self.initial
         self.previous = self.initial
+        self.num_of_filled = self.current.count_filled()
+        self.need_to_be_filled = self.num_of_bottles - num_empty
 
     def restart(self):
         self.current = self.initial
@@ -44,8 +50,8 @@ class Controller:
         # may be returns copy
         return self.current.bottle_list[num]
 
-    def add_to(self, num, size=1):
-        return self.current.bottle_list[num].add_to_the_top(size)
+    def add_to(self, num, size, color):
+        return self.current.bottle_list[num].add_to_the_top(size, color)
 
     def erase_from(self, num, size=1):
         self.current.bottle_list[num].erase_from_the_top(size)
@@ -53,17 +59,18 @@ class Controller:
     def reset_representor(self):
         self.representor.reset(self.current)
 
-    def game_loop(self):
-        clock = pygame.time.Clock()
-        self.name = self.representor.start_screen()
-        print("go on")
-        self.coins = 0
+    def show_curr(self):
+        self.representor.show_curr()
+        pygame.display.flip()
+
+    def end_round(self):
+        pass
+
+    def play(self, clock):
         up = None
         while True:
             self.reset_representor()
-            self.representor.show_curr()
             for event in pygame.event.get():
-                self.representor.show_curr()
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -72,23 +79,42 @@ class Controller:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if up is None:
                         up = self.representor.collide_with(pygame.mouse.get_pos())
-                        print(up)
                         if up is not None:
-                            print("lift")
                             self.representor.lift(up)
-                            pygame.display.flip()
+
                     else:
                         compared = self.representor.collide_with(pygame.mouse.get_pos())
                         if compared is None:
                             continue
-                        print(compared)
+
                         if self.current.are_compatible(up, compared):
-                            # trouble is here
-                            able_to_erase = self.add_to(compared, self.get_bottle(up).get_size_of_empty_space())
+                            able_to_erase = self.add_to(compared, self.get_bottle(up).get_top_size(),
+                                                        self.get_bottle(up).get_top_color())
                             self.erase_from(up, able_to_erase)
+                            if self.get_bottle(compared).is_filled():
+                                self.num_of_filled += 1
+                                if self.num_of_filled == self.need_to_be_filled:
+                                    self.end_round()
+                                    self.coins += self.plus
+                                    return
                             up = None
+                            self.show_curr()
+                        else:
+                            up = None
+                            self.show_curr()
 
                 clock.tick(60)
 
+    def game_loop(self):
+        clock = pygame.time.Clock()
+        self.name, self.num_of_bottles = self.representor.start_screen()
+        self.current = BottleSet(self.num_of_bottles)
+        self.current.random_filling(2)
+        self.initial = self.current
+        self.previous = self.current
+        self.coins = 0
+        self.reset_representor()
+        self.show_curr()
+        self.play(clock)
 
 
